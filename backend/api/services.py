@@ -294,12 +294,18 @@ def resume_agent(
         "feedback": feedback,
     }
 
-    result = graph.invoke(
-        Command(
-            resume=human_response,
-        ),
-        config=config,
-    )
+    try:
+        result = graph.invoke(
+            Command(
+                resume=human_response,
+            ),
+            config=config,
+        )
+    except Exception as exc:
+        state = graph.get_state(config)
+        if state and getattr(state, "values", None):
+            return serialize_result(state.values, session_id)
+        raise exc
 
     return serialize_result(
         result,
