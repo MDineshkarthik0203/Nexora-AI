@@ -1,0 +1,37 @@
+# AgentForge Agent Design
+
+## 1. Supervisor Agent
+- Analyzes incoming user queries and classifies them into one of five execution routes:
+  1. CHAT: For everyday conversational greetings and non-technical chitchat.
+  2. RESEARCH: For inquiries requiring up-to-date web intelligence and conceptual explanations.
+  3. RAG: For internal architecture, codebase details, and private organizational documentation.
+  4. CODING: For code generation, algorithmic implementation, debugging, and execution.
+  5. MULTI_AGENT: For complex workflows requiring a coordinated pipeline of research, private knowledge retrieval, and coding.
+
+## 2. Planning Agent
+- Breaks down complex requirements into a structured, sequential plan.
+- Identifies the ordered list of specialized agents needed for multi-agent workflows.
+
+## 3. Research Agent
+- Integrates Tavily Web Search API to retrieve live web data, technical articles, and documentation.
+- Formats search results and extracts verified reference URLs.
+
+## 4. RAG Agent
+- Utilizes Mistral Embeddings (mistral-embed) and Chroma vector store.
+- Performs semantic retrieval across local knowledge base documents.
+- Reranks candidate document passages using Cross-Encoder (cross-encoder/ms-marco-MiniLM-L-6-v2) for precision.
+
+## 5. Coding Agent
+- Implements production-grade Python code adhering to specified requirements.
+- Automatically executes code in an isolated subprocess runner with error capture.
+- Features self-healing iterative code repair up to 3 retry attempts upon execution failures.
+
+## 6. Reviewer Agent
+- Validates generated code, execution outputs, and technical solutions against requirements.
+- Emits pass/revise status signals.
+
+## 7. Human-in-the-Loop (HITL)
+- LangGraph interrupt mechanism enables human approval or revision requests before finalized outputs.
+
+## 8. Writer Agent
+- Synthesizes findings, code implementations, verification logs, and citations into a clean, markdown-formatted final report.

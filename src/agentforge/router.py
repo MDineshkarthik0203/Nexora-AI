@@ -44,35 +44,35 @@ def human_review_router(state: AgentState):
     return "revise"
 
 
-def multi_agent_router(state:AgentState):
-    agent_paln=state.get("agent_plan","")
-    current_index=state.get("current_agent_index")
+def multi_agent_router(state: AgentState):
+    agent_plan = state.get("agent_plan", [])
+    current_index = state.get("current_agent_index", state.get("agent_current_index", 0))
 
-    if not agent_paln:
+    if not agent_plan:
         return "research"
-    if current_index >= len(agent_paln):
+    if current_index is None or current_index >= len(agent_plan):
         return "done"
-    current_agent=agent_plan["current_index"]
-    if current_agent=="reserach":
+    current_agent = agent_plan[current_index]
+    if current_agent == "research":
         return "research"
-    if current_agent=="rag":
+    if current_agent == "rag":
         return "rag"
-    if current_agent=="coding":
+    if current_agent == "coding":
         return "coding"
     return "research"
 
-def multi_agent_next_router(state:AgentState):
-    agent_paln=state.get("agent_plan","")
-    current_index=state.get("agent_current_index",0)
-    next_index=current_index + 1
-    if next_index >= len(agent_plan):
+def multi_agent_next_router(state: AgentState):
+    agent_plan = state.get("agent_plan", [])
+    current_index = state.get("current_agent_index", state.get("agent_current_index", 0))
+
+    if not agent_plan or current_index is None or current_index >= len(agent_plan):
         return "done"
-    next_agent=agent_paln["next_index"]
+    next_agent = agent_plan[current_index]
     if next_agent == "research":
         return "research"
-    if next_agent=="rag":
+    if next_agent == "rag":
         return "rag"
-    if next_index == "coding":
+    if next_agent == "coding":
         return "coding"
     return "done"
 

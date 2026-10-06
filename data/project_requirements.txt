@@ -1,0 +1,23 @@
+# AgentForge Project Requirements
+
+## Prerequisites
+- Python >= 3.11 (Python 3.13 supported)
+- Node.js >= 18 and npm
+- Groq API Key (for LLM inference)
+- Tavily API Key (for web search)
+- Mistral AI API Key (for RAG embeddings)
+
+## Backend Stack
+- Framework: Django 5.x + Django REST Framework
+- Agent Orchestration: LangGraph with InMemorySaver checkpointer
+- LLM Provider: ChatGroq (openai/gpt-oss-20b or llama-3.3-70b-versatile)
+- Vector DB: ChromaDB
+- Embeddings: MistralAI Embeddings (mistral-embed)
+- Reranker: sentence-transformers CrossEncoder
+- Web Search: langchain-tavily / TavilySearch
+
+## Frontend Stack
+- Framework: React 18 + Vite
+- Icons: Lucide React
+- Real-time workflow status tracking
+- Interactive Human-in-the-loop review approval modal

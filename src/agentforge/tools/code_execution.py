@@ -1,6 +1,7 @@
 import subprocess
 import tempfile
 import os
+import sys
 
 
 def execute_python_code(code: str):
@@ -29,7 +30,7 @@ def execute_python_code(code: str):
 
         # Execute Python code
         result = subprocess.run(
-            ["python", temp_file],
+            [sys.executable, temp_file],
             capture_output=True,
             text=True,
             timeout=10

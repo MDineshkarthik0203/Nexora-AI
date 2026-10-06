@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 from langchain_groq import ChatGroq
 from .tools.web_search import web_search,format_search_results
@@ -8,12 +9,40 @@ from langgraph.types import interrupt
 
 from .state import AgentState
 
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+load_dotenv(PROJECT_ROOT / ".env")
 load_dotenv()
 
-llm=ChatGroq(
-    model="openai/gpt-oss-20b",
-    temperature=0
-)
+
+class LazyChatGroq:
+    """Lazy wrapper for ChatGroq that initializes only when invoked."""
+
+    def __init__(self):
+        self._llm = None
+
+    def _get_llm(self):
+        if self._llm is None:
+            api_key = os.getenv("GROQ_API_KEY")
+            if not api_key:
+                raise ValueError(
+                    "GROQ_API_KEY is not set. Please add GROQ_API_KEY to your .env file."
+                )
+            model = os.getenv("GROQ_MODEL", "openai/gpt-oss-20b")
+            self._llm = ChatGroq(
+                model=model,
+                temperature=0,
+                groq_api_key=api_key,
+            )
+        return self._llm
+
+    def invoke(self, *args, **kwargs):
+        return self._get_llm().invoke(*args, **kwargs)
+
+    def __getattr__(self, name):
+        return getattr(self._get_llm(), name)
+
+
+llm = LazyChatGroq()
 
 
 def chat_agent(state: AgentState):
@@ -641,14 +670,16 @@ def multi_agent_start(state: AgentState):
 
     return {
         "current_agent_index": 0,
+        "agent_current_index": 0,
         "is_multi_agent": True
     }
 
-def advance_agent(state:AgentState):
-    current_index=state.get("agent_current_index",0)
-    next_index=current_index+1
+def advance_agent(state: AgentState):
+    current_index = state.get("current_agent_index", state.get("agent_current_index", 0))
+    next_index = current_index + 1
     return {
-        "agent_current_index":next_index
+        "current_agent_index": next_index,
+        "agent_current_index": next_index
     }
 
 

@@ -1,5 +1,5 @@
-# src/agentforge/tools/rag.py
-
+import os
+from pathlib import Path
 from dotenv import load_dotenv
 
 from langchain_mistralai import MistralAIEmbeddings
@@ -18,39 +18,65 @@ from sentence_transformers import CrossEncoder
 
 
 # ============================================================
-# ENVIRONMENT
+# ENVIRONMENT & PATHS
 # ============================================================
 
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
+CHROMA_DIR = PROJECT_ROOT / "chroma_db"
+load_dotenv(PROJECT_ROOT / ".env")
 load_dotenv()
 
-
-# ============================================================
-# 1. MISTRAL EMBEDDINGS
-# ============================================================
-
-embeddings = MistralAIEmbeddings(
-    model="mistral-embed"
-)
+_embeddings = None
+_vectorstore = None
+_reranker = None
 
 
-# ============================================================
-# 2. CHROMA VECTOR DATABASE
-# ============================================================
+def get_embeddings():
+    global _embeddings
+    if _embeddings is None:
+        api_key = os.getenv("MISTRAL_API_KEY") or os.getenv("MISTRALAI_API_KEY")
+        if not api_key:
+            raise ValueError(
+                "MISTRAL_API_KEY is not set. Please add MISTRAL_API_KEY to your .env file."
+            )
+        _embeddings = MistralAIEmbeddings(
+            model="mistral-embed",
+            mistral_api_key=api_key,
+        )
+    return _embeddings
 
-vectorstore = Chroma(
-    collection_name="agentforge_mistral_rag",
-    embedding_function=embeddings,
-    persist_directory="chroma_db"
-)
+
+def get_vectorstore():
+    global _vectorstore
+    if _vectorstore is None:
+        _vectorstore = Chroma(
+            collection_name="agentforge_mistral_rag",
+            embedding_function=get_embeddings(),
+            persist_directory=str(CHROMA_DIR),
+        )
+    return _vectorstore
 
 
-# ============================================================
-# 3. LOCAL RERANKER
-# ============================================================
+def get_reranker():
+    global _reranker
+    if _reranker is None:
+        _reranker = CrossEncoder(
+            "cross-encoder/ms-marco-MiniLM-L-6-v2"
+        )
+    return _reranker
 
-reranker = CrossEncoder(
-    "cross-encoder/ms-marco-MiniLM-L-6-v2"
-)
+
+class _LazyProxy:
+    def __init__(self, getter):
+        self._getter = getter
+
+    def __getattr__(self, name):
+        return getattr(self._getter(), name)
+
+
+embeddings = _LazyProxy(get_embeddings)
+vectorstore = _LazyProxy(get_vectorstore)
+reranker = _LazyProxy(get_reranker)
 
 
 # ============================================================
@@ -69,10 +95,14 @@ def ingest_documents(
     # Load documents
     # --------------------------------------------------------
 
-    print("\nLoading documents...")
+    target_dir = Path(data_directory)
+    if not target_dir.is_absolute():
+        target_dir = PROJECT_ROOT / data_directory
+
+    print(f"\nLoading documents from {target_dir}...")
 
     loader = DirectoryLoader(
-        data_directory,
+        str(target_dir),
         glob="**/*.txt",
         loader_cls=TextLoader,
         loader_kwargs={
@@ -117,7 +147,7 @@ def ingest_documents(
 
     print("\nGenerating Mistral embeddings...")
 
-    vectorstore.add_documents(
+    get_vectorstore().add_documents(
         chunks
     )
 
@@ -143,10 +173,14 @@ def retrieve_documents(
         f"\n[RAG] Retrieving top {k} documents..."
     )
 
-    documents = vectorstore.similarity_search(
-        query,
-        k=k
-    )
+    try:
+        documents = get_vectorstore().similarity_search(
+            query,
+            k=k
+        )
+    except Exception as exc:
+        print(f"[RAG] Retrieval error: {exc}")
+        return []
 
     print(
         f"[RAG] Retrieved {len(documents)} documents."
@@ -189,9 +223,13 @@ def rerank_documents(
     # Calculate relevance scores
     # --------------------------------------------------------
 
-    scores = reranker.predict(
-        pairs
-    )
+    try:
+        scores = get_reranker().predict(
+            pairs
+        )
+    except Exception as exc:
+        print(f"[RAG] Reranking notice: {exc}. Returning retrieved documents.")
+        return documents[:top_k]
 
     # --------------------------------------------------------
     # Combine documents with scores
