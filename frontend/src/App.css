@@ -850,6 +850,160 @@ button {
   margin-top: 14px;
 }
 
+.plan-container {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  background: rgba(28, 100, 237, 0.08);
+  border: 1px solid rgba(28, 100, 237, 0.25);
+  border-radius: 8px;
+}
+
+.final-response {
+  margin-top: 10px;
+  line-height: 1.6;
+  color: #e2e8f0;
+}
+
+.markdown-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.md-h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #60a5fa;
+  margin-top: 14px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid #1e293b;
+  padding-bottom: 4px;
+}
+
+.md-h3 {
+  font-size: 1.1rem;
+  font-weight: 650;
+  color: #93c5fd;
+  margin-top: 10px;
+  margin-bottom: 4px;
+}
+
+.md-h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #bfdbfe;
+  margin-top: 8px;
+  margin-bottom: 2px;
+}
+
+.md-p {
+  margin: 4px 0;
+  line-height: 1.65;
+  color: #e2e8f0;
+}
+
+.md-list-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 3px 0 3px 6px;
+  line-height: 1.55;
+  color: #e2e8f0;
+}
+
+.md-bullet {
+  color: #3b82f6;
+  font-weight: bold;
+}
+
+.inline-code {
+  background: #1e293b;
+  color: #38bdf8;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 0.9em;
+}
+
+.code-block-wrapper {
+  margin: 12px 0;
+  background: #090d16;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.code-block-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 12px;
+  background: #0f172a;
+  border-bottom: 1px solid #1e293b;
+  font-size: 12px;
+  color: #94a3b8;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.code-copy-btn {
+  background: transparent;
+  border: 1px solid #334155;
+  color: #cbd5e1;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.code-copy-btn:hover {
+  background: #1e293b;
+  color: #fff;
+}
+
+.code-block-pre {
+  margin: 0;
+  padding: 12px 14px;
+  background: #070b12;
+  overflow-x: auto;
+  font-family: 'JetBrains Mono', Consolas, Monaco, monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #f8fafc;
+}
+
+.generated-code-section {
+  margin-top: 14px;
+}
+
+.sources-section {
+  margin-top: 14px;
+  padding: 10px 14px;
+  background: #0f172a;
+  border-radius: 6px;
+  border: 1px solid #1e293b;
+}
+
+.sources-title {
+  font-weight: 600;
+  color: #94a3b8;
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+
+.sources-section ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.sources-section a {
+  color: #38bdf8;
+  text-decoration: underline;
+  font-size: 13px;
+  word-break: break-all;
+}
+
 
 /* =========================================================
    MESSAGE ACTIONS

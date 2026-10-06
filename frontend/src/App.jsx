@@ -458,56 +458,138 @@ function WelcomeMessage() {
 
 
 /* =========================================================
-   PLAN MESSAGE
+   PLAN MESSAGE & MARKDOWN VIEWER
 ========================================================= */
 
 function PlanMessage({ result }) {
-
-  const plan =
-    result?.state?.plan?.length
-      ? result.state.plan
-      : [
-          "Define architecture and components",
-          "Design LangGraph workflow",
-          "Implement search and document tools",
-          "Generate structured report",
-          "Provide complete code and explanation",
-        ];
+  const plan = result?.state?.plan || [];
+  if (!plan.length) return null;
 
   return (
-    <AgentMessage>
-
-      <div className="response-heading">
-        Great! I'll help you design a Research Agent using LangGraph.
-      </div>
-
+    <div className="plan-container">
       <div className="plan-heading">
-        Here's the plan:
+        <strong>Execution Plan:</strong>
       </div>
 
       <div className="plan-list">
-
         {plan.map((item, index) => (
           <div className="plan-item" key={index}>
-
-            <span className="plan-number">
-              {index + 1}
-            </span>
-
-            <span>
-              {item}
-            </span>
-
+            <span className="plan-number">{index + 1}</span>
+            <span>{item}</span>
           </div>
         ))}
-
       </div>
+    </div>
+  );
+}
 
-      <div className="response-ending">
-        Let's start with the system architecture.
-      </div>
+function renderInline(text) {
+  if (!text) return null;
+  const tokens = text.split(/(\*\*.*?\*\*|`.*?`)/g);
+  return tokens.map((token, i) => {
+    if (token.startsWith("**") && token.endsWith("**")) {
+      return <strong key={i}>{token.slice(2, -2)}</strong>;
+    }
+    if (token.startsWith("`") && token.endsWith("`")) {
+      return (
+        <code key={i} className="inline-code">
+          {token.slice(1, -1)}
+        </code>
+      );
+    }
+    return token;
+  });
+}
 
-    </AgentMessage>
+function MarkdownViewer({ content }) {
+  if (!content) return null;
+
+  const parts = content.split(/(```[\s\S]*?```)/g);
+
+  return (
+    <div className="markdown-body">
+      {parts.map((part, index) => {
+        if (part.startsWith("```")) {
+          const firstLineEnd = part.indexOf("\n");
+          const language =
+            firstLineEnd !== -1 ? part.slice(3, firstLineEnd).trim() : "";
+          const code =
+            firstLineEnd !== -1 ? part.slice(firstLineEnd + 1, -3) : part.slice(3, -3);
+
+          return (
+            <div key={index} className="code-block-wrapper">
+              <div className="code-block-header">
+                <span className="code-lang">{language || "code"}</span>
+                <button
+                  className="code-copy-btn"
+                  onClick={() => navigator.clipboard?.writeText(code)}
+                >
+                  Copy
+                </button>
+              </div>
+              <pre className="code-block-pre">
+                <code>{code}</code>
+              </pre>
+            </div>
+          );
+        }
+
+        const lines = part.split("\n");
+        return (
+          <div key={index} className="text-section">
+            {lines.map((line, lineIdx) => {
+              const trimmed = line.trim();
+              if (!trimmed) {
+                return (
+                  <div
+                    key={lineIdx}
+                    className="empty-line"
+                    style={{ height: "6px" }}
+                  />
+                );
+              }
+
+              if (trimmed.startsWith("### ")) {
+                return (
+                  <h4 key={lineIdx} className="md-h4">
+                    {renderInline(trimmed.slice(4))}
+                  </h4>
+                );
+              }
+              if (trimmed.startsWith("## ")) {
+                return (
+                  <h3 key={lineIdx} className="md-h3">
+                    {renderInline(trimmed.slice(3))}
+                  </h3>
+                );
+              }
+              if (trimmed.startsWith("# ")) {
+                return (
+                  <h2 key={lineIdx} className="md-h2">
+                    {renderInline(trimmed.slice(2))}
+                  </h2>
+                );
+              }
+
+              if (trimmed.startsWith("- ") || trimmed.startsWith("* ")) {
+                return (
+                  <div key={lineIdx} className="md-list-item">
+                    <span className="md-bullet">•</span>
+                    <span>{renderInline(trimmed.slice(2))}</span>
+                  </div>
+                );
+              }
+
+              return (
+                <p key={lineIdx} className="md-p">
+                  {renderInline(line)}
+                </p>
+              );
+            })}
+          </div>
+        );
+      })}
+    </div>
   );
 }
 
@@ -1215,6 +1297,7 @@ function App() {
             type: "agent",
             content:
               "I generated a result and it is ready for human review.",
+            result,
           },
         ]);
 
@@ -1371,14 +1454,50 @@ function App() {
                     >
 
                       <AgentMessage>
-                        {item.result?.state
-                          ?.plan?.length ? (
-                          <PlanMessage
-                            result={item.result}
-                          />
-                        ) : (
-                          <div className="final-response">
-                            {item.content}
+                        {item.result?.state?.plan?.length > 0 && (
+                          <PlanMessage result={item.result} />
+                        )}
+
+                        <div className="final-response">
+                          {item.content ? (
+                            <MarkdownViewer content={item.content} />
+                          ) : (
+                            item.result?.final_answer && (
+                              <MarkdownViewer
+                                content={item.result.final_answer}
+                              />
+                            )
+                          )}
+                        </div>
+
+                        {item.result?.state?.code &&
+                          !item.content?.includes(item.result.state.code) && (
+                            <div className="generated-code-section">
+                              <div className="sources-title">
+                                Generated Code:
+                              </div>
+                              <pre className="code-block-pre">
+                                <code>{item.result.state.code}</code>
+                              </pre>
+                            </div>
+                          )}
+
+                        {item.result?.state?.sources?.length > 0 && (
+                          <div className="sources-section">
+                            <div className="sources-title">Sources:</div>
+                            <ul>
+                              {item.result.state.sources.map((src, sIdx) => (
+                                <li key={sIdx}>
+                                  <a
+                                    href={src}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                  >
+                                    {src}
+                                  </a>
+                                </li>
+                              ))}
+                            </ul>
                           </div>
                         )}
                       </AgentMessage>
