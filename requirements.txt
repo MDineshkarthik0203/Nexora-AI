@@ -1,0 +1,10 @@
+langgraph
+langchain-groq
+python-dotenv
+langchain-tavily
+langchain-chroma
+langchain-mistralai
+langchain-community
+langchain-text-splitters
+mistralai
+sentence-transformers

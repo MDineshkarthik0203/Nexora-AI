@@ -1,0 +1,17 @@
+AgentForge is a multi-agent AI engineering copilot.
+
+The system uses LangGraph for orchestration.
+
+The system contains Research Agent,
+RAG Agent, Coding Agent, Reviewer and Writer.
+
+The Research Agent uses Tavily for web research.
+
+The RAG Agent retrieves information from
+the private knowledge base.
+
+The Coding Agent generates programming solutions.
+
+The Reviewer validates agent outputs.
+
+The Writer creates the final response.
